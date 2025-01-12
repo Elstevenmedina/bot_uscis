@@ -16,6 +16,27 @@ const fillInput = async (page, selector, value) => {
     }
 };
 
+//complete the colors 
+
+const colorEyesAll = [
+    {Negros:'Black'},
+    {Azules:'Blue'},
+    {Marrones:'Brown'},
+    {Grises:'Gray'},
+    {Verdes:'Green'},
+]
+
+const colorHairAll = [
+    {Calvo:'Bald (no hair)'},
+    {Negro:'Black'},
+    {Rubio:'Blonde'},
+    {Marron:'Brow'},
+    {Gris:'Gray'},
+    {Rojo:'Red'},
+    {Arenoso:'Sandy'},
+    {Blanco:'White'},
+]
+
 const startTPS = async (page) => {
     try {
         await page.goto('https://my.uscis.gov/forms/application-for-temporary-protected-status/start/overview');
@@ -117,6 +138,160 @@ const startTPS = async (page) => {
         await page.click('input[name="applicant.yourContactInformation.isMailingEqualToPhysical"]');
 
         await nextClick(page);
+        
+        const dateOfBirth = inputs.find(input => input.TituloPagina.includes('fecha de nacimiento')).Valor;
+        const yearOfBirth = dateOfBirth.split('-')[0];
+        const monthOfBirth = dateOfBirth.split('-')[1];
+        const dayOfBirth = dateOfBirth.split('-')[2];
+        
+        await fillInput(page,'input[name="applicant.whenAndWhereYouWereBorn.dob"]', `${monthOfBirth}/${dayOfBirth}/${yearOfBirth}`);
+        
+        const cityOfBirth = inputs.find(input => input.Nombre === 'En que ciudad naciste ?').Valor;
+        
+        await fillInput(page,'input[name="applicant.whenAndWhereYouWereBorn.birthAddress.city"]', cityOfBirth);
+        
+        await page.waitForSelector('input[name="applicant.whenAndWhereYouWereBorn.birthAddress.country"]');
+        await page.click('input[name="applicant.whenAndWhereYouWereBorn.birthAddress.country"]');
+        
+        await page.waitForSelector('ul[role="listbox"]'); 
+        
+        let countryOfBirth = inputs.find(input => input.Nombre === '¿En que pais naciste').Valor;
+        countryOfBirth = countryOfBirth.charAt(0).toUpperCase() + optionText.slice(1);
+        countryOfBirth = countryOfBirth.replace(/ /g, '');//remove spaces
+        await page.evaluate((countryOfBirth) => {
+            const options = Array.from(document.querySelectorAll('li[role="option"]'));
+            console.log({options})
+            const option = options.find(opt => opt.textContent.trim() === countryOfBirth);
+            if (option) option.click();
+        }, countryOfBirth);
+        
+        await page.evaluate(() => {
+            const input = document.querySelector('input[name="applicant.whenAndWhereYouWereBorn.birthAddress.country"]');
+            return input.value;
+        });
+        
+        await nextClick(page);
+        
+        const gender = inputs.find(input => input.Nombre === 'Sexo').Valor;
+        if(gender.toLowerCase().includes('masculino')){
+            await page.waitForSelector('input[name="applicant.describeYourself.gender"][value="3"][type="radio"]');
+            await page.click('input[name="applicant.describeYourself.gender"][value="3"][type="radio"]');
+        }else{
+            await page.waitForSelector('input[name="applicant.describeYourself.gender"][value="1"][type="radio"]');
+            await page.click('input[name="applicant.describeYourself.gender"][value="1"][type="radio"]');
+        }
+        
+        await page.waitForSelector('input[name="applicant.describeYourself.ethnicity"][value="1"][type="radio"]');
+        await page.click('input[name="applicant.describeYourself.ethnicity"][value="1"][type="radio"]');
+        
+        await page.waitForSelector('input[name="5"]');
+        await page.click('input[name="5"]');
+        
+        const height = inputs.find(input => input.Nombre === 'Estatura').Valor;
+        const feet = height.length == 3 && height.includes(',') ? height.split(",")[0] : height.charAt(0);
+        const inches = height.length == 3 && height.includes(',') ? height.split(",")[1] : 0
+        
+        await page.waitForSelector('input[name="applicant.describeYourself.height.feet"]');
+        await page.click('input[name="applicant.describeYourself.height.feet"]');
+        
+        await page.waitForSelector('ul[role="listbox"]'); 
+        
+        await page.evaluate((feet) => {
+            const options = Array.from(document.querySelectorAll('li[role="option"]'));
+            const option = options.find(opt => opt.textContent.trim() === feet);
+            if (option) option.click();
+        }, feet);
+        
+        await page.evaluate(() => {
+            const input = document.querySelector('input[name="applicant.describeYourself.height.feet"]');
+            return input.value;
+        });
+        
+        await page.waitForSelector('input[name="applicant.describeYourself.height.inches"]');
+        await page.click('input[name="applicant.describeYourself.height.inches"]');
+        
+        await page.waitForSelector('ul[role="listbox"]'); 
+        
+        await page.evaluate((inches) => {
+            const options = Array.from(document.querySelectorAll('li[role="option"]'));
+            const option = options.find(opt => opt.textContent.trim() === inches);
+            if (option) option.click();
+        }, inches);
+        
+        await page.evaluate(() => {
+            const input = document.querySelector('input[name="applicant.describeYourself.height.inches"]');
+            return input.value;
+        });
+        
+        let pounds = inputs.find(input => input.Nombre === 'Peso').Valor;
+        pounds = pounds.match(/\d+/g);
+        
+        await fillInput(page,'input[name="applicant.describeYourself.weight"]', pounds);
+        let colorEyes = inputs.find(input => input.TituloPagina === '¿Cual es el color de tus ojos?').Nombre;
+        colorEyes = colorEyes.trim()
+        finalColorEyes = colorEyesAll.find(color => color[colorEyes]) ? colorEyesAll.find(color => color[colorEyes])[colorEyes] : 'Unknown/Other';
+        
+        await page.waitForSelector('input[name="applicant.describeYourself.eyeColor"]');
+        await page.click('input[name="applicant.describeYourself.eyeColor"]');
+        
+        await page.waitForSelector('ul[role="listbox"]'); 
+        
+        await page.evaluate((finalColorEyes) => {
+            const options = Array.from(document.querySelectorAll('li[role="option"]'));
+            const option = options.find(opt => opt.textContent.trim() === finalColorEyes);
+            if (option) option.click();
+        }, finalColorEyes);
+        
+        await page.evaluate(() => {
+            const input = document.querySelector('input[name="applicant.describeYourself.eyeColor"]');
+            return input.value;
+        });
+
+        let colorHair = inputs.find(input => input.TituloPagina === '¿Cual es el color de tus ojos?').Nombre;
+        colorHair = colorHair.trim()
+        finalColorHair = colorHairAll.find(color => color[colorHair]) ? colorHairAll.find(color => color[colorHair])[colorHair] : 'Unknown/Other';
+
+        await page.waitForSelector('input[name="applicant.describeYourself.hairColor"]');
+        await page.click('input[name="applicant.describeYourself.hairColor"]');
+        
+        await page.waitForSelector('ul[role="listbox"]'); 
+        
+        await page.evaluate((finalColorEyes) => {
+            const options = Array.from(document.querySelectorAll('li[role="option"]'));
+            const option = options.find(opt => opt.textContent.trim() === finalColorEyes);
+            if (option) option.click();
+        }, finalColorEyes);
+        
+        await page.evaluate(() => {
+            const input = document.querySelector('input[name="applicant.describeYourself.hairColor"]');
+            return input.value;
+        });
+
+        await nextClick(page);
+
+        const livedAnotherCountry = inputs.find(input => input.TituloPagina === 'Viviste en un tercer país antes de entrar a los Estados Unidos? ').Nombre;
+        if(livedAnotherCountry.includes('SI')){
+            const otherCountry = inputs.find(input => input.TituloPagina === '¿Que Pais?').Valor.trim();
+            
+            await page.waitForSelector('input[name="applicant.whereHaveYouLived.countryOfResidence.0"]');
+            await page.click('input[name="applicant.whereHaveYouLived.countryOfResidence.0"]');
+            
+            await page.waitForSelector('ul[role="listbox"]'); 
+            
+            await page.evaluate((otherCountry) => {
+                const options = Array.from(document.querySelectorAll('li[role="option"]'));
+                const option = options.find(opt => opt.textContent.trim() === otherCountry);
+                if (option) option.click();
+            }, otherCountry);
+            
+            await page.evaluate(() => {
+                const input = document.querySelector('input[name="applicant.whereHaveYouLived.countryOfResidence.0"]');
+                return input.value;
+            });
+        }
+
+        await nextClick(page);
+        
 
     }catch(e){
         console.log(e);
