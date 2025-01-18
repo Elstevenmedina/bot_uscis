@@ -1,7 +1,6 @@
 const puppeteer = require('puppeteer');
-const startTPS = require('./tps/tps');
 
-const StartLogin = async () => {
+const StartLogin = async (formToStart, resultId) => {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
 
@@ -80,9 +79,9 @@ const StartLogin = async () => {
 
     await page.click('[aria-label="Submit"]');
 
+    formToStart(page, resultId)
+
 };
 
-// Ejecutar la función
-StartLogin().catch((error) => {
-    console.error('Error:', error);
-});
+
+module.exports = StartLogin;

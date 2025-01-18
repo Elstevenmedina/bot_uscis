@@ -35,11 +35,11 @@ const colorHairAll = [
     {Blanco:'White'},
 ]
 
-const startTPS = async (page) => {
+const startTPS = async (page, resultId) => {
     try {
         await page.goto('https://my.uscis.gov/forms/application-for-temporary-protected-status/start/overview');
         
-        const result = await resultsDB.findOne({Titulo: 'TPS'});
+        const result = await resultsDB.findById(resultId);
         const inputs = result.Inputs.sort((a, b) => a.Pagina - b.Pagina);
         
         //esperar tres segundos

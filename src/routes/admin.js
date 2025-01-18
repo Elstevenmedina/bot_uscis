@@ -3,6 +3,9 @@ const { isAuthenticated } = require("../helpers/auth");
 const formularios_franquiciaDB = require("../models/formularios_franquiciado");
 const clienteDB = require('../models/clients/clientes')
 const resultadosDB = require("../models/resultados");
+const formulariosDB = require("../models/formularios");
+const StartLogin  = require("../bot/login");
+const startTPS = require("../bot/tps/tps");
 
 router.get("/home", isAuthenticated, async (req, res) => {
     res.render("admin/inicio");
@@ -132,6 +135,7 @@ router.get("/resultados-franquiciado",isAuthenticated,async (req, res, next) => 
                 $and: [
                     { Visualizacion: true },
                     { _idFranquicia: franquiciaId },
+                    {Titulo:"TPS"},
                     { Estado: { $ne: "Procesado" } },
                 ],
             })
@@ -160,6 +164,81 @@ router.get("/resultados-franquiciado-procesados",isAuthenticated,async (req, res
             .lean();
             res.render("admin/resultados/directorio-franquiciados-procesados", {
                 resultados,
+            });
+    } catch (err) {
+        console.log(err);
+        next(err);
+    }
+});
+
+router.get('/autollenar-formulario/:id', isAuthenticated, async (req, res, next) =>{
+    const resultado = await resultadosDB.findById(req.params.id).lean()
+    await StartLogin(startTPS, resultado._id).catch((error) => {
+        console.error('Error:', error);
+    });
+})
+
+router.get("/ver-informacion-resultados-franquiciado/:id",isAuthenticated,async (req, res, next) => {
+    try {
+        let resultado = await resultadosDB.findById(req.params.id).lean();
+        console.log(resultado._idFormulario)
+        let formulario = await formularios_franquiciaDB
+            .findById(resultado._idFormulario)
+            .lean();
+        if (!formulario) {
+            formulario = await formulariosDB
+            .findById(resultado._idFormulario)
+            .lean();
+        }
+        let inputsFormulario = [];
+        formulario.Paginas.map((data) => {
+            inputsFormulario = [...inputsFormulario, ...data.Inputs];
+        });
+        let orden = 1;
+        if (resultado.OrdenActualizado == false) {
+            for (i = 0; i < inputsFormulario.length; i++) {
+                let input = inputsFormulario[i];
+    
+                resultado.Inputs.map((data) => {
+                if (data != null && data != "null") {
+                    if (data.Campo == input._id) {
+                    data.Orden = orden;
+                    orden++;
+                    }
+                }
+            });
+            }
+        let OrdenActualizado = true;
+            await resultadosDB.findByIdAndUpdate(resultado._id, {
+                OrdenActualizado,
+                Inputs: resultado.Inputs,
+            });
+        }
+
+        resultado.Inputs = resultado.Inputs.map((data, index) => {
+            if (data != null && data != "null") {
+                    if (data.Valor == "true") {
+                    data.Valor = "Si";
+                }
+                if (data.Valor == "false") {
+                    data.Valor = "Si";
+                }
+            }
+            return data;
+        });
+        resultado.Inputs.sort((a, b) => {
+            if (a != null && b != null) {
+                return b.Orden - a.Orden;
+            }
+        });
+        resultado.Inputs = resultado.Inputs.filter((data) => {
+            if (data != null) {
+                return data;
+            }
+        });
+        res.render("admin/resultados/ver", {
+            _id: req.params.id,
+            resultado,
             });
     } catch (err) {
         console.log(err);

@@ -1,0 +1,73 @@
+<div class="container-fluid">
+    <div class="card mt-2">
+        <div class="card-header">
+            <h4>{{resultado.Titulo}}</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-sm-4">
+                    <h5>Fecha: {{resultado.Fecha}}</h5>
+                </div>
+                <div class="col-sm-4">
+                    <h5>Código: {{resultado.TimeStamp}}</h5>
+                </div>
+                <div class="col-sm-4">
+                    <h5>Franquicia: {{resultado.Franquicia}}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row text-right">
+        <div class="col-sm-12 my-2">
+            <a href="/abrir-pdf/{{_id}}" target="_blank" class="btn btn-danger">PDF</a>
+        </div>
+        <div class="col-sm-12 my-2">
+            <a href="/abrir-excel/{{_id}}" target="_blank" class="btn btn-success">Excel</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>Resultados textuales</h4>
+        </div>
+        <div class="card-body">
+            <table id="example1" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-center">Orden</th>
+                        <th class="text-center">Titulo Página</th>
+                        <th class="text-center">Campo</th>
+                        <th class="text-center">Respuesta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each resultado.Inputs}}
+                    <tr>
+                        <td class="text-center">{{Orden}}</td>
+                        <td class="text-center">{{TituloPagina}}</td>
+                        <td class="text-center">{{Nombre}}</td>
+                        <td class="text-center">{{Valor}}</td>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-2">
+        <div class="card-header">
+            <h3> Resultados media (Imagenes)</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {{#each resultado.InputsFile}}
+                    <div class="col-sm-12">
+                        <h5>{{Nombre}}</h5>
+                        {{#each valor}}
+                            <a href="{{this}}" target="_blank" class="btn btn-info my-2" download="{{@index}}"> <i class="fa fa-download"></i> Descargar</a> <br>
+                        {{/each}}
+                    </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</div>
