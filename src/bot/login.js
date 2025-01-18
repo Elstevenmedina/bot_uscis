@@ -80,10 +80,6 @@ const StartLogin = async () => {
 
     await page.click('[aria-label="Submit"]');
 
-    startTPS(page);
-
-    // Mantener el navegador abierto para depuración
-    // await browser.close();
 };
 
 // Ejecutar la función

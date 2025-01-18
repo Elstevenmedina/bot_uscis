@@ -1,0 +1,74 @@
+    html { 
+        background: url('/images/bg_2.png') no-repeat center center fixed; 
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+    }
+
+.outside {
+    position: relative;
+    margin: 0px 50px 20px 50px;
+}
+
+label {
+    color: #585454 !important;
+
+}
+
+.shadow-inputs{
+    box-shadow: 0px 0px 0px 1px #c0c0c0;
+}
+.shadow-inputs-danger{
+    box-shadow: 0px 0px 0px 3px red;
+}
+
+.cardContainer{
+    border-radius: 25px !important;
+    box-shadow: 0px 0px 0px 5px #c4c4c4;
+    
+}
+
+
+/* Tablets medianos (por ejemplo, iPads en modo horizontal) */
+@media (min-width: 1025px) and (max-width: 1366px) {
+    .card{
+        width: 100vw !important; 
+        margin-top: 00px !important; 
+        margin-left:0% !important;  
+        margin-right: 0% !important; 
+        border-radius: 30px !important;
+    }
+    body {
+        padding: 0px !important;
+    }
+}
+
+/* Teléfonos móviles en modo vertical */
+@media (max-width: 767px) {
+    .card{
+        width: 100vw !important; 
+        height: 100vh !important; 
+        margin-top: 0px !important; 
+        margin-left:0% !important;  
+        margin-right: 0% !important; 
+        border-radius: 0px !important;
+    
+    }
+    body {
+        padding: 0px !important;
+    }
+}
+
+
+body {
+    height: 100vh; /* Or a specific height value */
+}
+.insertarContador {
+    width: 50vw;
+    height: 50vh;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
