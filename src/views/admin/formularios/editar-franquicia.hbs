@@ -1,0 +1,222 @@
+<div class="container-fluid mt-3">
+    <div class="card">
+        <div class="card-header">
+            <h4 id="TituloSeccion" data-_id="{{formulario._id}}">Edición de formulario</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="mb-3"> 
+                        <label for="Titulo">Título del formulario</label>
+                        <input type="text" value="{{formulario.Titulo}}" readonly  name="Titulo" id="Titulo" class="form-control" placeholder="Titulo:">
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="mb-3">
+                        <label for="TituloPagina">Título de página</label>
+                        <input type="text" class="form-control" name="TituloPagina" readonly id="TituloPagina" placeholder="Titulo página:">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="mb-3">
+                        <label for="Pagina">Página</label>
+                        <input type="text" name="Pagina" id="Pagina" class="form-control" readonly>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="mb-3">
+                        <label for="Descripcion">Descripción de la pagina <span class="text-muted">(Opcional)</span></label>
+                        <textarea name="Descripcion" id="Descripcion" class="form-control" readonly cols="30" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="mb-3">
+                        <label for="Precio">Precio</label>
+                        <input type="number" name="Precio" id="Precio" value="{{formulario.Precio}}" class="form-control" placeholder="Precio">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="mb-3">
+                        <label for="TiempoEstimado">Tiempo estimado</label>
+                        <select name="TiempoEstimado" id="TiempoEstimado" class="form-control " disabled>
+                            <option value="{{formulario.TiempoEstimado}}" selected>{{formulario.TiempoEstimado}}</option>
+                            <option value="0-5 MINUTOS">0-5 MINUTOS</option>
+                            <option value="5-10 MINUTOS">5-10 MINUTOS</option>
+                            <option value="10-15 MINUTOS">10-15 MINUTOS</option>
+                            <option value="15-20 MINUTOS">15-20 MINUTOS</option>
+                            <option value="20-25 MINUTOS">20-25 MINUTOS</option>
+                            <option value="25-30 MINUTOS">25-30 MINUTOS</option>
+                            <option value="30-35 MINUTOS">30-35 MINUTOS</option>
+                            <option value="35-40 MINUTOS">35-40 MINUTOS</option>
+                            <option value="40-45 MINUTOS">40-45 MINUTOS</option>
+                            <option value="45-50 MINUTOS">45-50 MINUTOS</option>
+                            <option value="50-55 MINUTOS">50-55 MINUTOS</option>
+                            <option value="55-60 MINUTOS">55-60 MINUTOS</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-6 d-none">
+                    <div class="mb-2">
+                        <label for="Nombre">Nombre del campo</label>
+                        <input type="text" class="form-control"  id="Nombre" placeholder="Nombre de campo">
+                    </div>
+                </div>
+                <div class="col-sm-6 d-none">
+                    <div class="mb-2">
+                        <label for="Tipo">Tipo de campo</label>
+                        <select name="Tipo" id="Tipo" class="form-control">
+                            <option value="0">--Seleccione un tipo de campo--</option>
+                            <option value="textarea">Area de texto</option>
+                            <option value="file">Archivo</option>
+                            <option value="checkbox">Casilla de verificación</option>
+                            <option value="email">Correo electronico</option>
+                            <option value="date">Fecha</option>
+                            <option value="number">Numero</option>
+                            <option value="text">Texto</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-5 d-none">
+                    <div class="mb-3">
+                        <label for="Opcional">¿Campo opcional?</label>
+                        <select name="Opcional" id="Opcional" class="form-control">
+                            <option value="0">--Seleccione una opción--</option>
+                            <option value="Si">Si</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                </div>
+ 
+                <div class="col-sm-5 d-none">
+                    <div class="mb-3">
+                        <label for="Espacio">Espacio a ocupar</label>
+                        <select name="Espacio" id="Espacio" class="form-control">
+                            <option value="0">--Seleccione una opción--</option>
+                            <option value="1 Columna">1 Columna</option>
+                            <option value="2 Columnas">2 Columna</option>
+                            <option value="3 Columnas">3 Columna</option>
+                            <option value="4 Columnas">4 Columna</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-2 mt-3 d-none">
+                    <div class="mb-3">
+                        <button class="btn btn-outline-info mt-3 w-100" id="btnAgregar">Agregar a la lista</button>
+                    </div>
+                </div>
+                <div class="col-sm-12 mt-3 d-none">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <td>Nombre</td>
+                                    <td>Tipo</td>
+                                    <td>Opcional</td>
+                                    <td>Espacio</td>
+                                    <td>Elliminar</td>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-sm-12 text-right d-none">
+                    <button class="btn btn-primary" id="btnCrearPagina">Crear página</button>
+                </div>
+                <div class="col-sm-12 text-right mt-5">
+                    <button class="btn btn-success" id="btnGuardarCambios" data-_idformulario="{{formulario._id}}">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="insertarPaginas">
+        {{#each formulario.Paginas}}
+            <div class="card bg-secondary item" id="{{_id}}" data-id="{{_id}}">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <h4>{{TituloPagina}}</h4>
+                        </div>
+                        <div class="col-sm-6 text-right">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <button class="btn btn-light configButton d-none" data-idpagina="{{_id}}" data-idformulario="{{_idFormulario}}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" data-idpagina="{{_id}}" data-idformulario="{{_idFormulario}}" height="16" fill="currentColor" class="bi bi-gear-fill configButton" viewBox="0 0 16 16">
+                                            <path data-idpagina="{{_id}}" data-idformulario="{{_idFormulario}}" class="configButton" d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="btn btn-light moneyButton" data-idpagina="{{_id}}" data-idformulario="{{_idFormulario}}">
+                                        <svg xmlns="http://www.w3.org/2000/svg"  data-idpagina="{{_id}}" data-idformulario="{{_idFormulario}}" width="16" height="16" fill="currentColor" class="bi bi-cash moneyButton" viewBox="0 0 16 16">
+                                            <path class="moneyButton"  data-idpagina="{{_id}}" data-idformulario="{{_idFormulario}}" d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/> 
+                                            <path class="moneyButton"  data-idpagina="{{_id}}" data-idformulario="{{_idFormulario}}" d="M0 4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V4zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V6a2 2 0 0 1-2-2H3z"/>
+                                        </svg>
+                                    </button>
+                                    <br>
+                                    Página {{Pagina}} 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            {{Descripcion}}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mt-2">
+                            {{#each Inputs}}
+                                    {{#if checkbox}}
+                                    <div class="{{Espacio}}">
+                                        <div class="mb-3 border shadow p-3 mb-5 bg-white rounded">
+                                            <div class="form-check ">
+                                                <input class="form-check-input big-checkbox" type="checkbox" name="{{_id}}" value="" {{required}} id="{{_id}}" >
+                                                <label class="form-check-label ml-3" for="{{_id}}">
+                                                    {{Nombre}}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{/if}}
+                                    {{#if file}}
+                                    <div class="{{Espacio}}">
+                                        <div class="mb-3">
+                                            <label for="{{_id}}">{{Nombre}}</label>
+                                            <input type="file" class="form-control" name="{{_id}}" id="{{_id}}" {{required}}>
+                                        </div>
+                                    </div>
+                                    {{/if}}
+                                    {{#if textarea}}
+                                    <div class="{{Espacio}}">
+                                        <div class="mb-3">
+                                            <label for="{{_id}}">{{Nombre}}</label>
+                                            <textarea class="form-control" name="{{_id}}" name="{{Nombre}}" {{required}} cols="30" rows="10" placeholder="{{Nombre}}:"></textarea>
+                                        </div>
+                                    </div>
+                                    {{/if}}
+                                    {{#if normal}}
+                                    <div class="{{Espacio}}">
+                                        <div class="mb-3">
+                                            <label for="{{_id}}">{{Nombre}}</label>
+                                            <input type="{{Tipo}}" {{required}} class="form-control" id="{{_id}}" name="{{_id}}" placeholder="{{Nombre}}:">
+                                        </div>
+                                    </div>
+                                    {{/if}}
+                            {{/each}}
+                        </div>
+                        <div class="row d-none">
+                            <div class="col-sm-12 text-right">
+                                <button class="btn btn-info" data-idPagina="{{_id}}" data-idFormulario="{{_idFormulario}}">Editar</button>
+                                <button class="btn btn-danger" data-idPagina="{{_id}}" data-idFormulario="{{_idFormulario}}">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {{/each}}
+        <div class="text-right my-2">
+            <button class="btn btn-outline-danger" id="btnEliminarFormulario" data-_idformulario="{{formulario._id}}">Eliminar formulario</button>
+        </div>
+    </div>
+</div>
+<script src="/js/sweetalert2.min.js"></script>
+<script src="/js/admin/editar-formulario-franquiciado.js"></script>

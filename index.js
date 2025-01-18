@@ -68,6 +68,7 @@ if(process.env.NODE_ENV !==  "production"){
   
   //Rutas
   app.use(require("./src/routes/login"));
+  app.use(require("./src/routes/admin"));
   
   app.use(express.static(path.join(__dirname,"src", "public")));
   

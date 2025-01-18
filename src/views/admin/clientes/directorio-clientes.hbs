@@ -1,0 +1,42 @@
+<div class="container-fluid mt-2">
+    <section class="content">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="card-title">Directorio de clientes</h3>
+                    </div>
+                    <div class="col-sm-12">
+                        {{>success}}
+                        {{>errors}}
+                    </div>
+                </div>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body">
+                <table id="example1" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-center">Nombres</th>
+                        <th class="text-center">Apellidos</th>
+                        <th class="text-center">Direccion</th>
+                        <th class="text-center">Número contacto</th>
+                        <th class="text-center">Correo electrónico</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each clientes}}
+                    <tr>
+                        <td class="text-center">{{Nombres}}</td>
+                        <td class="text-center">{{Apellidos}}</td>
+                        <td class="text-center">{{Direccion}}</td>
+                        <td class="text-center">{{NumeroContacto}}</td>
+                        <td class="text-center">{{CorreoElectronico}}</td>
+                    {{/each}}
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+</script>

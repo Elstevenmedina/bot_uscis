@@ -1,0 +1,61 @@
+<div class="container-fluid mt-2">
+    <section class="content">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="card-title">Directorio de resultados</h3>
+                    </div>
+                    <div class="col-sm-12">
+                        {{>success}}
+                        {{>errors}}
+                    </div>
+                </div>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body">
+                <table id="example1" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-center">Fecha</th>
+                        <th class="text-center">Fecha culminación</th>
+                        <th class="text-center">Cliente</th>
+                        <th class="text-center">Email cliente</th>
+                        <th class="text-center">Formulario</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Franquicia</th>
+                        <th class="text-center">Metodo pago</th>
+                        <th class="text-center">Precio</th>
+                        <th class="text-center">Informacion zelle</th>
+                        <th class="text-center">Ver informacion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each resultados}}
+                    <tr>
+                        <td class="text-center">{{Fecha}}</td>
+                        <td class="text-center">{{FechaCulminacion}}</td>
+                        <td class="text-center">{{NombresCliente}}</td>
+                        <td class="text-center">{{CorreoElectronicoCliente}}</td>
+                        <td class="text-center">{{Titulo}}</td>
+                        <td class="text-center">{{Estado}}</td>
+                        <td class="text-center">{{Franquicia}}</td>
+                        <td class="text-center">{{MetodoPago}}</td>
+                        <td class="text-center">{{PrecioFinal}}</td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btnZelle" data-id="{{_id}}">Ver</button>
+                        </td>
+                        <td class="text-center">
+                            <a href="/ver-informacion-resultados-franquiciado/{{_id}}" class="btn btn-info btn-sm">Ver info</a>
+                        </td>
+                    {{/each}}
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+</script>
+<script src="/js/sweetalert2.min.js"></script>
+<script src="/js/admin/directorio-resultados.js"></script>
