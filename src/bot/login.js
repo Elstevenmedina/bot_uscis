@@ -1,7 +1,10 @@
 const puppeteer = require('puppeteer');
 
 const StartLogin = async (formToStart, resultId) => {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({
+        headless: false,  
+        args: ['--no-sandbox', '--disable-setuid-sandbox']  
+    });
     const page = await browser.newPage();
 
     await page.goto('https://myaccount.uscis.gov/sign-in', { waitUntil: 'networkidle2' });
