@@ -17,7 +17,7 @@ if(process.env.NODE_ENV !==  "production"){
   require("./src/config/passport");
 
   
-  app.set("port", process.env.PORT || 5050);
+  app.set("port", process.env.PORT || 3000);
   app.set("views", path.join(__dirname, "src", "views"));
   app.engine(
     ".hbs",

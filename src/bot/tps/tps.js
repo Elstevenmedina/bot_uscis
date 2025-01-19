@@ -28,7 +28,7 @@ const colorHairAll = [
     {Calvo:'Bald (no hair)'},
     {Negro:'Black'},
     {Rubio:'Blonde'},
-    {Marron:'Brow'},
+    {Marron:'Brown'},
     {Gris:'Gray'},
     {Rojo:'Red'},
     {Arenoso:'Sandy'},
@@ -311,7 +311,7 @@ const startTPS = async (page, resultId) => {
         
         await nextClick(page);
 
-        let alienNumber = inputs.find(input => input.TituloPagina === '¿Cual es tu numero de alien?').Valor;
+        let alienNumber = inputs.find(input => input.TituloPagina === '¿Cual es tu numero de alien?') ? inputs.find(input => input.TituloPagina === '¿Cual es tu numero de alien?').Valor : "";
         alienNumber = alienNumber.replace(/[\s\-Aa_]/g, '');
 
         if(alienNumber === ""){
@@ -321,7 +321,7 @@ const startTPS = async (page, resultId) => {
             await fillInput(page,'input[name="applicant.otherImmigrationInfo.alienNumber.number"]', alienNumber);
         }
 
-        let socialNumber = inputs.find(input => input.TituloPagina === '¿Cual es tu numero de seguro social?').Valor;
+        let socialNumber = inputs.find(input => input.TituloPagina === '¿Cual es tu numero de seguro social?') ? inputs.find(input => input.TituloPagina === '¿Cual es tu numero de seguro social?').Valor : "";
         socialNumber = socialNumber.replace(/[\s\-_]/g, '');
         if(socialNumber === ""){
             await page.waitForSelector('input[name="formikFactoryUIMeta.applicant.otherImmigrationInfo.socialSecurityNumber.none"]');
