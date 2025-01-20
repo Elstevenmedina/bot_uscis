@@ -1,15 +1,22 @@
 {
   "name": "bot_autollenado",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
-    "start": "cross-env NODE_ENV=production node index.js"
+    "start": "cross-env NODE_ENV=production node index.js",
+    "electron": "electron .",
+    "build": "electron-builder",
+    "release": "electron-builder --publish always"
   },
   "author": "rodpandastudio",
+  "repository": "https://github.com/Elstevenmedina/bot_uscis_releases",
+  "publish": {
+    "provider": "github",
+    "releaseType": "release"
+  },
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "connect-flash": "^0.1.1",
@@ -17,6 +24,8 @@
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.7",
+    "electron-updater": "^6.3.9",
+    "excel4node": "^1.8.2",
     "express": "^4.21.2",
     "express-handlebars": "^8.0.1",
     "express-session": "^1.18.1",
@@ -29,6 +38,30 @@
     "puppeteer": "^24.0.0"
   },
   "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
     "nodemon": "^3.1.9"
+  },
+  "build": {
+    "appId": "com.rodpandastudio.growingmore",
+    "productName": "Growing More",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

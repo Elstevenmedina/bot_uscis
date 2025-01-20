@@ -246,4 +246,282 @@ router.get("/ver-informacion-resultados-franquiciado/:id",isAuthenticated,async 
     }
 });
 
+router.get("/ver-informacion-resultados-franquiciado/:id",isAuthenticated,async (req, res, next) => {
+    try {
+        let resultado = await resultadosDB.findById(req.params.id).lean();
+        let formulario = await formularios_franquiciaDB
+          .findById(resultado._idFormulario)
+          .lean();
+        if (!formulario) {
+          formulario = await formulariosDB
+            .findById(resultado._idFormulario)
+            .lean();
+        }
+        let inputsFormulario = [];
+        formulario.Paginas.map((data) => {
+          inputsFormulario = [...inputsFormulario, ...data.Inputs];
+        });
+        let orden = 1;
+        if (resultado.OrdenActualizado == false) {
+          for (i = 0; i < inputsFormulario.length; i++) {
+            let input = inputsFormulario[i];
+  
+            resultado.Inputs.map((data) => {
+              if (data != null && data != "null") {
+                if (data.Campo == input._id) {
+                  data.Orden = orden;
+                  orden++;
+                }
+              }
+            });
+          }
+          let OrdenActualizado = true;
+          await resultadosDB.findByIdAndUpdate(resultado._id, {
+            OrdenActualizado,
+            Inputs: resultado.Inputs,
+          });
+        }
+  
+        resultado.Inputs = resultado.Inputs.map((data, index) => {
+          if (data != null && data != "null") {
+            if (data.Valor == "true") {
+              data.Valor = "Si";
+            }
+            if (data.Valor == "false") {
+              data.Valor = "Si";
+            }
+          }
+          return data;
+        });
+  
+        resultado.Inputs.sort((a, b) => {
+          if (a != null && b != null) {
+            return b.Orden - a.Orden;
+          }
+        });
+  
+        resultado.Inputs = resultado.Inputs.filter((data) => {
+          if (data != null) {
+            return data;
+          }
+        });
+  
+        res.render("admin/resultados/ver", {
+          layout: "franquiciado.hbs",
+          _id: req.params.id,
+          resultado,
+        });
+      } catch (err) {
+        console.log(err);
+        next(err);
+      }
+    }
+  );
+
+  router.get("/abrir-pdf/:id", async (req, res, next) => {
+    let resultado = await resultadosDB.findById(req.params.id).lean();
+    let formulario = await formulariosDB.findById(resultado._idFormulario).lean();
+    if(!formulario){
+      formulario = await formularios_franquiciaDB.findById(resultado._idFormulario)
+    }
+    let inputsFormulario = [];
+    formulario.Paginas.map((data) => {
+      inputsFormulario = [...inputsFormulario, ...data.Inputs];
+    });
+  
+    let orden = 1;
+    if (resultado.OrdenActualizado == false) {
+      for (i = 0; i < inputsFormulario.length; i++) {
+        let input = inputsFormulario[i];
+        resultado.Inputs.map((data) => {
+          if (data != null && data != "null") {
+            if (data.Campo == input._id) {
+              data.Orden = orden;
+              orden++;
+            }
+          }
+        });
+      }
+      let OrdenActualizado = true;
+      await resultadosDB.findByIdAndUpdate(resultado._id, {
+        OrdenActualizado,
+        Inputs: resultado.Inputs,
+      });
+    }
+  
+    resultado.Inputs = resultado.Inputs.map((data, index) => {
+      if (data != null && data != "null") {
+        if (data.Valor == "true") {
+          data.Valor = "Si";
+        }
+        if (data.Valor == "false") {
+          data.Valor = "Si";
+        }
+      }
+      return data;
+    });
+  
+    resultado.Inputs.sort((a, b) => {
+      if (a != null && b != null) {
+        return b.Orden - a.Orden;
+      }
+    });
+  
+    resultado.Inputs = resultado.Inputs.filter((data) => {
+      if (data != null) {
+        return data;
+      }
+    });
+  
+    resultado.Inputs.sort((a, b) => a.Orden - b.Orden);
+  
+    res.render("admin/documentos/resultados", {
+      layout: false,
+      _id: req.params.id,
+      resultado,
+    });
+});
+
+router.get("/abrir-excel/:id", async (req, res, next) => {
+    let resultado = await resultadosDB.findById(req.params.id).lean();
+    let formulario = await formulariosDB.findById(resultado._idFormulario).lean();
+    if(!formulario){
+      formulario = await formularios_franquiciaDB.findById(resultado._idFormulario)
+    }
+    let inputsFormulario = [];
+    formulario.Paginas.map((data) => {
+      inputsFormulario = [...inputsFormulario, ...data.Inputs];
+    });
+  
+    let orden = 1;
+    if (resultado.OrdenActualizado == false) {
+      for (i = 0; i < inputsFormulario.length; i++) {
+        let input = inputsFormulario[i];
+        resultado.Inputs.map((data) => {
+          if (data != null && data != "null") {
+            if (data.Campo == input._id) {
+              data.Orden = orden;
+              orden++;
+            }
+          }
+        });
+      }
+      let OrdenActualizado = true;
+      await resultadosDB.findByIdAndUpdate(resultado._id, {
+        OrdenActualizado,
+        Inputs: resultado.Inputs,
+      });
+    }
+  
+    resultado.Inputs = resultado.Inputs.map((data, index) => {
+      if (data != null && data != "null") {
+        if (data.Valor == "true") {
+          data.Valor = "Si";
+        }
+        if (data.Valor == "false") {
+          data.Valor = "Si";
+        }
+      }
+      return data;
+    });
+  
+    resultado.Inputs.sort((a, b) => {
+      if (a != null && b != null) {
+        return b.Orden - a.Orden;
+      }
+    });
+  
+    resultado.Inputs = resultado.Inputs.filter((data) => {
+      if (data != null) {
+        return data;
+      }
+    });
+  
+    const xl = require("excel4node");
+  
+    const wb = new xl.Workbook();
+  
+    const ws = wb.addWorksheet(`${resultado.Titulo}`);
+  
+    const style = wb.createStyle({
+      font: {
+        color: "#FFFFFF",
+        size: 11,
+      },
+      fill: {
+        type: "pattern",
+        patternType: "solid",
+        bgColor: "#313a46",
+        fgColor: "#313a46",
+      },
+    });
+  
+    resultado.Inputs.sort((a, b) => a.Orden - b.Orden);
+  
+    ws.cell(1, 1).string("Orden").style(style);
+    ws.cell(1, 2).string("Titulo página").style(style);
+    ws.cell(1, 3).string("Campo").style(style);
+    ws.cell(1, 4).string("Respuesta").style(style);
+  
+    let fila = 2;
+    for (let i = 0; i < resultado.Inputs.length; i++) {
+      let item = resultado.Inputs[i];
+      ws.cell(fila, 1).string(item.Orden);
+      ws.cell(fila, 2).string(item.TituloPagina);
+      ws.cell(fila, 3).string(item.Nombre);
+      ws.cell(fila, 4).string(item.Valor);
+      fila++;
+    }
+  
+    wb.write(`${resultado.Titulo}.xlsx`, res);
+});
+
+router.get("/api/solicitar-info-zelle/:id", async (req, res, next) => {
+    try {
+      let resultado = await resultadosDB.findById(req.params.id);
+  
+      res.send(JSON.stringify(resultado.Zelle));
+    } catch (err) {
+      console.log(err);
+    }
+});
+
+router.put("/api/cambiar-estado-resultados/:id", async (req, res, next) => {
+    try {
+      let { estado , fechaCulminacion} = req.body;
+  
+      if (estado == "Procesado") {
+        let sms = [];
+  
+        let resultadoBase = await resultadosDB.findById(req.params.id).lean();
+  
+        if (resultadoBase._idFranquicia == "Principal") {
+          sms = await usersDB
+            .find({ Franquicia: "Principal" })
+            .select("numeroTelefonico codigoPais");
+        } else {
+          sms = await usersDB
+            .find({ Franquicia: resultadoBase._idFranquicia })
+            .select("numeroTelefonico codigoPais");
+        }
+  
+        for (i = 0; i < sms.length; i++) {
+          let numero = `${sms[i].codigoPais}${sms[i].numeroTelefonico}`;
+          let mensaje = `El resultado del formulario "${resultadoBase.Titulo}" ha sido actualizado al estado: "${estado}"`;
+          sendSMS(mensaje, numero);
+        }
+      }
+  
+      await resultadosDB.findByIdAndUpdate(req.params.id, { Estado: estado, FechaCulminacion: fechaCulminacion });
+  
+      let data = {
+        ok: true,
+      };
+  
+      res.send(JSON.stringify(data));
+    } catch (err) {
+      console.log(err);
+    }
+});
+  
 module.exports = router;
