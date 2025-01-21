@@ -1,16 +1,59 @@
 const resultsDB = require('../../models/resultados');
 
+const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
 const nextClick = async (page) => {
-    await page.waitForSelector('[data-testid="next-button"]');
-    await page.click('[data-testid="next-button"]');
+    await sleep(3000)
+    const buttonNext = await page.locator('[data-testid="next-button"]').waitHandle();
+    await buttonNext.click()
 }
+
+const clickInput = async (page, selector) =>{
+    try {
+        await sleep(1000)
+        const inputHandle = await page.locator(selector).waitHandle();
+        await page.waitForSelector(selector);
+        await sleep(1000)
+        await inputHandle.click();
+    }catch(e){
+        console.log(e)
+    }
+}
+
 
 const fillInput = async (page, selector, value) => {
     try {
         await page.click(selector);
+        await sleep(1000)
         await page.focus(selector);
+        await sleep(1000)
         await page.evaluate((selector) => (document.querySelector(selector).value = ''), selector); 
+        await sleep(1000)
         await page.type(selector, value);
+    }catch(e){
+        console.log(e)
+    }
+};
+
+const selectDropdownOption = async (page, listboxSelector, optionText, inputSelector) => {
+    try {
+
+        await page.waitForSelector(listboxSelector);
+    
+        const normalizedText = optionText.charAt(0).toUpperCase() + optionText.slice(1).replace(/ /g, '');
+    
+        await page.evaluate((listboxSelector, normalizedText) => {
+            const options = Array.from(document.querySelectorAll(`${listboxSelector} li[role="option"]`));
+            const option = options.find(opt => opt.textContent.trim() === normalizedText);
+            if (option) option.click();
+        }, listboxSelector, normalizedText);
+    
+        if (inputSelector) {
+            return await page.evaluate((inputSelector) => {
+                const input = document.querySelector(inputSelector);
+                return input ? input.value : undefined;
+            }, inputSelector);
+        }
     }catch(e){
         console.log(e)
     }
@@ -42,21 +85,19 @@ const startTPS = async (page, resultId) => {
         const result = await resultsDB.findById(resultId);
         const inputs = result.Inputs.sort((a, b) => a.Pagina - b.Pagina);
         
-        //esperar tres segundos
         await nextClick(page);
         await nextClick(page);
-        
-        await page.waitForSelector('input[name="gettingStarted.typeOfApplication.tps"]');
-        await page.click('input[name="gettingStarted.typeOfApplication.tps"]');
-        await page.waitForSelector('input[name="gettingStarted.typeOfApplication.requestForEA"]');
-        await page.click('input[name="gettingStarted.typeOfApplication.requestForEA"]');
-        
-        await page.waitForSelector('input[name="gettingStarted.typeOfApplication.nameOfTPSCountry"]');
-        await page.click('input[name="gettingStarted.typeOfApplication.nameOfTPSCountry"]');
 
+        await clickInput(page, 'input[name="gettingStarted.typeOfApplication.tps"]')
+        await clickInput(page, 'input[name="gettingStarted.typeOfApplication.requestForEA"]')
+
+        await clickInput(page, 'input[name="gettingStarted.typeOfApplication.nameOfTPSCountry"]')
+        
         await page.waitForSelector('ul[role="listbox"]'); 
 
         let optionText = inputs.find(input => input.Nombre === '¿En que pais naciste').Valor;
+        //await selectDropdownOption(page, 'li[role="option"]', optionText, 'input[name="gettingStarted.typeOfApplication.nameOfTPSCountry"]')
+
         optionText = optionText.charAt(0).toUpperCase() + optionText.slice(1);
         optionText = optionText.replace(/ /g, '');//remove spaces
         await page.evaluate((optionText) => {
@@ -69,10 +110,11 @@ const startTPS = async (page, resultId) => {
             const input = document.querySelector('input[name="gettingStarted.typeOfApplication.nameOfTPSCountry"]');
             return input.value;
         });
-        
+
         await nextClick(page);
-        await page.waitForSelector('input[name="formikFactoryUIMeta.gettingStarted.preparerAndInterpreterInformation.hasHelper"]');
-        await page.click('input[name="formikFactoryUIMeta.gettingStarted.preparerAndInterpreterInformation.hasHelper"]');
+
+        await clickInput(page, 'input[name="formikFactoryUIMeta.gettingStarted.preparerAndInterpreterInformation.hasHelper"][value="false"]')
+
         await nextClick(page);
         
         const firstName = inputs.find(input => input.Nombre === 'Primer Nombre').Valor;
@@ -82,17 +124,15 @@ const startTPS = async (page, resultId) => {
         await fillInput(page,'input[name="applicant.yourName.name.firstName"]', firstName);
         await fillInput(page,'input[name="applicant.yourName.name.middleName"]', secondName);
         await fillInput(page,'input[name="applicant.yourName.name.lastName"]', lastNames);
-        
-        await page.waitForSelector('input[name="formikFactoryUIMeta.applicant.yourName.additionalNames.hasAdditionalNames"]');
-        await page.click('input[name="formikFactoryUIMeta.applicant.yourName.additionalNames.hasAdditionalNames"]');
+
+        await clickInput(page, 'input[name="formikFactoryUIMeta.applicant.yourName.additionalNames.hasAdditionalNames"][value="false"]')
         
         await nextClick(page);
         
         const phoneNumber = inputs.find(input => input.Nombre === 'Número de contacto').Valor;
         await fillInput(page,'input[name="applicant.yourContactInformation.contactInformation.daytimePhone"]', phoneNumber);
-        
-        await page.waitForSelector('input[name="formikFactoryUIMeta.applicant.yourContactInformation.contactInformation.sameAsDaytimePhone"]');
-        await page.click('input[name="formikFactoryUIMeta.applicant.yourContactInformation.contactInformation.sameAsDaytimePhone"]');
+
+        await clickInput(page, 'input[name="formikFactoryUIMeta.applicant.yourContactInformation.contactInformation.sameAsDaytimePhone"]')
         
         const emailAddress = inputs.find(input => input.Nombre === 'Correo electrónico').Valor;
         await fillInput(page,'input[name="applicant.yourContactInformation.contactInformation.emailAddress"]', emailAddress);
@@ -109,8 +149,7 @@ const startTPS = async (page, resultId) => {
         await fillInput(page,'input[name="applicant.yourContactInformation.mailingAddress.city"]', city);
         await fillInput(page,'input[name="applicant.yourContactInformation.mailingAddress.zipCode"]', zipCode);
         
-        await page.waitForSelector('input[name="applicant.yourContactInformation.mailingAddress.state"]');
-        await page.click('input[name="applicant.yourContactInformation.mailingAddress.state"]');
+        await clickInput(page, 'input[name="applicant.yourContactInformation.mailingAddress.state"]')
 
         await page.waitForSelector('ul[role="listbox"]');
 
@@ -128,8 +167,7 @@ const startTPS = async (page, resultId) => {
             return input.value;
         });
 
-        await page.waitForSelector('input[name="applicant.yourContactInformation.isMailingEqualToPhysical"]');
-        await page.click('input[name="applicant.yourContactInformation.isMailingEqualToPhysical"]');
+        await clickInput(page, 'input[name="applicant.yourContactInformation.isMailingEqualToPhysical"]')
 
         await nextClick(page);
         
@@ -144,9 +182,8 @@ const startTPS = async (page, resultId) => {
         
         await fillInput(page,'input[name="applicant.whenAndWhereYouWereBorn.birthAddress.city"]', cityOfBirth);
         
-        await page.waitForSelector('input[name="applicant.whenAndWhereYouWereBorn.birthAddress.country"]');
-        await page.click('input[name="applicant.whenAndWhereYouWereBorn.birthAddress.country"]');
-        
+        await clickInput(page, 'input[name="applicant.whenAndWhereYouWereBorn.birthAddress.country"]')
+
         await page.waitForSelector('ul[role="listbox"]'); 
         
         let countryOfBirth = inputs.find(input => input.Nombre === '¿En que pais naciste').Valor;
@@ -168,25 +205,20 @@ const startTPS = async (page, resultId) => {
         
         const gender = inputs.find(input => input.Nombre === 'Sexo').Valor;
         if(gender.toLowerCase().includes('masculino')){
-            await page.waitForSelector('input[name="applicant.describeYourself.gender"][value="3"][type="radio"]');
-            await page.click('input[name="applicant.describeYourself.gender"][value="3"][type="radio"]');
+            await clickInput(page, 'input[name="applicant.describeYourself.gender"][value="3"][type="radio"]')
         }else{
-            await page.waitForSelector('input[name="applicant.describeYourself.gender"][value="1"][type="radio"]');
-            await page.click('input[name="applicant.describeYourself.gender"][value="1"][type="radio"]');
+            await clickInput(page, 'input[name="applicant.describeYourself.gender"][value="1"][type="radio"]')
         }
         
-        await page.waitForSelector('input[name="applicant.describeYourself.ethnicity"][value="1"][type="radio"]');
-        await page.click('input[name="applicant.describeYourself.ethnicity"][value="1"][type="radio"]');
+        await clickInput(page, 'input[name="applicant.describeYourself.ethnicity"][value="1"][type="radio"]')
         
-        await page.waitForSelector('input[name="5"]');
-        await page.click('input[name="5"]');
+        await clickInput(page, 'input[name="5"]')
         
         const height = inputs.find(input => input.Nombre === 'Estatura').Valor;
         const feet = height.length == 3 && height.includes(',') ? height.split(",")[0] : height.charAt(0);
         const inches = height.length == 3 && height.includes(',') ? height.split(",")[1] : 0
-        
-        await page.waitForSelector('input[name="applicant.describeYourself.height.feet"]');
-        await page.click('input[name="applicant.describeYourself.height.feet"]');
+
+        await clickInput(page, 'input[name="applicant.describeYourself.height.feet"]')
         
         await page.waitForSelector('ul[role="listbox"]'); 
         
@@ -200,10 +232,9 @@ const startTPS = async (page, resultId) => {
             const input = document.querySelector('input[name="applicant.describeYourself.height.feet"]');
             return input.value;
         });
-        
-        await page.waitForSelector('input[name="applicant.describeYourself.height.inches"]');
-        await page.click('input[name="applicant.describeYourself.height.inches"]');
-        
+
+        await clickInput(page, 'input[name="applicant.describeYourself.height.inches"]')
+
         await page.waitForSelector('ul[role="listbox"]'); 
         
         await page.evaluate((inches) => {
@@ -225,9 +256,8 @@ const startTPS = async (page, resultId) => {
         colorEyes = colorEyes.trim()
         finalColorEyes = colorEyesAll.find(color => color[colorEyes]) ? colorEyesAll.find(color => color[colorEyes])[colorEyes] : 'Unknown/Other';
         
-        await page.waitForSelector('input[name="applicant.describeYourself.eyeColor"]');
-        await page.click('input[name="applicant.describeYourself.eyeColor"]');
-        
+        await clickInput(page, 'input[name="applicant.describeYourself.eyeColor"]')
+
         await page.waitForSelector('ul[role="listbox"]'); 
         
         await page.evaluate((finalColorEyes) => {
@@ -245,9 +275,8 @@ const startTPS = async (page, resultId) => {
         colorHair = colorHair.trim()
         finalColorHair = colorHairAll.find(color => color[colorHair]) ? colorHairAll.find(color => color[colorHair])[colorHair] : 'Unknown/Other';
 
-        await page.waitForSelector('input[name="applicant.describeYourself.hairColor"]');
-        await page.click('input[name="applicant.describeYourself.hairColor"]');
-        
+        await clickInput(page, 'input[name="applicant.describeYourself.hairColor"]')
+
         await page.waitForSelector('ul[role="listbox"]'); 
         
         await page.evaluate((finalColorEyes) => {
@@ -267,9 +296,8 @@ const startTPS = async (page, resultId) => {
         if(livedAnotherCountry.includes('SI')){
             const otherCountry = inputs.find(input => input.TituloPagina === '¿Que Pais?').Valor.trim();
             
-            await page.waitForSelector('input[name="applicant.whereHaveYouLived.countryOfResidence.0"]');
-            await page.click('input[name="applicant.whereHaveYouLived.countryOfResidence.0"]');
-            
+            await clickInput(page, 'input[name="applicant.whereHaveYouLived.countryOfResidence.0"]')
+
             await page.waitForSelector('ul[role="listbox"]'); 
             
             await page.evaluate((otherCountry) => {
@@ -285,13 +313,31 @@ const startTPS = async (page, resultId) => {
         }
 
         await nextClick(page);
+
+        await clickInput(page, 'input[name="applicant.yourImmigrationInformation.yourImmigrationInformation1.countriesOfCitizenship.0"]')
+
+            await page.waitForSelector('ul[role="listbox"]'); 
+            
+            await page.evaluate((countryOfBirth) => {
+                const options = Array.from(document.querySelectorAll('li[role="option"]'));
+                const option = options.find(opt => opt.textContent.trim() === countryOfBirth);
+                if (option) option.click();
+            }, countryOfBirth);
+            
+            await page.evaluate(() => {
+                const input = document.querySelector('input[name="applicant.yourImmigrationInformation.yourImmigrationInformation1.countriesOfCitizenship.0"]');
+                return input.value;
+            });
+
+
+        await nextClick(page);
+        
         await nextClick(page);
 
         const immigrationStatusResponse = 'TPS - Temporary Protected Status';
 
-        await page.waitForSelector('input[name="applicant.immigrationStatus.currentImmigrationStatus"]');
-        await page.click('input[name="applicant.immigrationStatus.currentImmigrationStatus"]');
-            
+        await clickInput(page, 'input[name="applicant.immigrationStatus.currentImmigrationStatus"]')
+
         await page.waitForSelector('ul[role="listbox"]'); 
         
         await page.evaluate((immigrationStatusResponse) => {
@@ -305,18 +351,15 @@ const startTPS = async (page, resultId) => {
             return input.value;
         });
 
-
-        await page.waitForSelector('input[name="applicant.immigrationStatus.inImmigrationProceeding"][value="false"][type="radio"]');
-        await page.click('input[name="applicant.immigrationStatus.inImmigrationProceeding"][value="false"][type="radio"]');
+        await clickInput(page, 'input[name="applicant.immigrationStatus.inImmigrationProceeding"][value="false"][type="radio"]')
         
         await nextClick(page);
-
+        
         let alienNumber = inputs.find(input => input.TituloPagina === '¿Cual es tu numero de alien?') ? inputs.find(input => input.TituloPagina === '¿Cual es tu numero de alien?').Valor : "";
         alienNumber = alienNumber.replace(/[\s\-Aa_]/g, '');
-
+        
         if(alienNumber === ""){
-            await page.waitForSelector('input[name="formikFactoryUIMeta.applicant.otherImmigrationInfo.alienNumber.none"]');
-            await page.click('input[name="formikFactoryUIMeta.applicant.otherImmigrationInfo.alienNumber.none"]');
+            await clickInput(page, 'input[name="formikFactoryUIMeta.applicant.otherImmigrationInfo.alienNumber.none"]')
         }else{
             await fillInput(page,'input[name="applicant.otherImmigrationInfo.alienNumber.number"]', alienNumber);
         }
@@ -324,8 +367,7 @@ const startTPS = async (page, resultId) => {
         let socialNumber = inputs.find(input => input.TituloPagina === '¿Cual es tu numero de seguro social?') ? inputs.find(input => input.TituloPagina === '¿Cual es tu numero de seguro social?').Valor : "";
         socialNumber = socialNumber.replace(/[\s\-_]/g, '');
         if(socialNumber === ""){
-            await page.waitForSelector('input[name="formikFactoryUIMeta.applicant.otherImmigrationInfo.socialSecurityNumber.none"]');
-            await page.click('input[name="formikFactoryUIMeta.applicant.otherImmigrationInfo.socialSecurityNumber.none"]');
+            await clickInput(page, 'input[name="formikFactoryUIMeta.applicant.otherImmigrationInfo.socialSecurityNumber.none"]')
         }else{
             await fillInput(page,'input[name="applicant.otherImmigrationInfo.socialSecurityNumber.number"]', socialNumber);
         }
@@ -337,38 +379,30 @@ const startTPS = async (page, resultId) => {
 
         const maritalStatus = inputs.find(input => input.TituloPagina === '¿Cual es tu estatus marital?').Nombre;
         if(maritalStatus.includes('Casado')){
-            await page.waitForSelector('input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="2"][type="radio"]');
-            await page.click('input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="2"][type="radio"]');
+            await clickInput(page, 'input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="2"][type="radio"]')
         }
         if(maritalStatus.includes('Divorciado')){
-            await page.waitForSelector('input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="3"][type="radio"]');
-            await page.click('input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="3"][type="radio"]');
+            await clickInput(page, 'input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="3"][type="radio"]')
         }
         if(maritalStatus.includes('Soltero')){
-            await page.waitForSelector('input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="1"][type="radio"]');
-            await page.click('input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="1"][type="radio"]');
+            await clickInput(page, 'input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="1"][type="radio"]')
         }
         if(maritalStatus.includes('Viudo')){
-            await page.waitForSelector('input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="4"][type="radio"]');
-            await page.click('input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="4"][type="radio"]');
+            await clickInput(page, 'input[name="yourFamily.maritalStatus.maritalStatus.marriageStatus"][value="4"][type="radio"]')
         }
         
         await nextClick(page);
         await nextClick(page);
-        
-        await page.waitForSelector('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.accompanyingAnotherIndividualInadmissible.question"][value="false"][type="radio"]');
-        await page.click('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.accompanyingAnotherIndividualInadmissible.question"][value="false"][type="radio"]');
-        
-        await page.waitForSelector('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.haveACommunicableDisease.question"][value="false"][type="radio"]');
-        await page.click('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.haveACommunicableDisease.question"][value="false"][type="radio"]');
-        
-        await page.waitForSelector('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.mentalDisorder.question"][value="false"][type="radio"]');
-        await page.click('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.mentalDisorder.question"][value="false"][type="radio"]');
 
+        await clickInput(page, 'input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.accompanyingAnotherIndividualInadmissible.question"][value="false"][type="radio"]')
+        
+        await clickInput(page, 'input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.haveACommunicableDisease.question"][value="false"][type="radio"]')
+        
+        await clickInput(page, 'input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility1.mentalDisorder.question"][value="false"][type="radio"]')
+        
         await nextClick(page);
-
-        await page.waitForSelector('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.country"]');
-        await page.click('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.country"]');
+        
+        await clickInput(page, 'input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.country"]')
             
         await page.waitForSelector('ul[role="listbox"]'); 
         
@@ -384,9 +418,8 @@ const startTPS = async (page, resultId) => {
         });
 
         if(livedAnotherCountry.includes('SI')){
-            await page.waitForSelector('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.enteredAnotherCountry"][value="true"][type="radio"]');
-            await page.click('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.enteredAnotherCountry"][value="true"][type="radio"]');
-        
+            await clickInput(page, 'input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.enteredAnotherCountry"][value="true"][type="radio"]')
+
             await nextClick(page);
 
             let dateFrom = inputs.find(input => input.TituloPagina === '¿Cuánto tiempo viviste en ese país?' && input.Nombre === "Desde").Valor;
@@ -436,237 +469,171 @@ const startTPS = async (page, resultId) => {
             
             await fillInput(page,'input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility3.otherCountriesTraveledTo.0.immigrationStatusInOtherCountry"]', responseStatusAnotherCountry);
             
-            await page.waitForSelector('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility3.otherCountriesTraveledTo.0.offeredImmigrationStatusByAnotherCountry.offeredStatus"][value="false"][type="radio"]');
-            await page.click('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility3.otherCountriesTraveledTo.0.offeredImmigrationStatusByAnotherCountry.offeredStatus"][value="false"][type="radio"]');
-
-            await page.waitForSelector('[id="table-submit-button"]');
-            await page.click('[id="table-submit-button"]');
-
+            await clickInput(page, 'input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility3.otherCountriesTraveledTo.0.offeredImmigrationStatusByAnotherCountry.offeredStatus"][value="false"][type="radio"]')
+            
+            await clickInput(page, '[id="table-submit-button"]')
+            
         }else{
-            await page.waitForSelector('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.enteredAnotherCountry"][value="false"][type="radio"]');
-            await page.click('input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.enteredAnotherCountry"][value="false"][type="radio"]');
+            await clickInput(page, 'input[name="eligibilityStandards.immigrationEligibility.immigrationEligibility2.enteredAnotherCountry"][value="false"][type="radio"]')
         }
 
         
         await nextClick(page);
 
-        const question1 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.unlawfullyVotedInUS.question"][value="false"]').waitHandle();
-        await question1.click();
-
-        const question2 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.everDeported.question"][value="false"]').waitHandle();
-        await question2.click();
-
-        const question3 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.everDepartedUnderOrderOfRemoval.question"][value="false"]').waitHandle();
-        await question3.click();
-
-        const question4 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.failedToAttendAnyImmigrationProceeding.question"][value="false"]').waitHandle();
-        await question4.click();
-
-        const question5 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.immigrationJudgeDeterminedYouFiledFrivolousAsylumClaim.question"][value="false"]').waitHandle();
-        await question5.click();
-
-        const question6 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.fraudulentlyTriedToObtainVisa.question"][value="false"]').waitHandle();
-        await question6.click();
-
-        const question7 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.assistedIllegalEntryIntoUS.question"][value="false"]').waitHandle();
-        await question7.click();
+        await clickInput(page,'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.unlawfullyVotedInUS.question"][value="false"]');
+        
+        const selectorsPage1 = [
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.everDeported.question"][value="false"]',
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.everDepartedUnderOrderOfRemoval.question"][value="false"]',
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.failedToAttendAnyImmigrationProceeding.question"][value="false"]',
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.immigrationJudgeDeterminedYouFiledFrivolousAsylumClaim.question"][value="false"]',
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.fraudulentlyTriedToObtainVisa.question"][value="false"]',
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations1.assistedIllegalEntryIntoUS.question"][value="false"]',
+        ];
+        
+        for (const selector of selectorsPage1) {
+            await clickInput(page, selector);
+        }
 
         await nextClick(page);
     
-        const question8 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations2.stowawayIntoUS.question"][value="false"]').waitHandle();
-        await question8.click();
+        const selectorsPage2 = [
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations2.stowawayIntoUS.question"][value="false"]',
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations2.usedFalseDocuments.question"][value="false"]',
+            'input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations2.subjectToFinalOrderForViolationSection274C.question"][value="false"]',
+        ];
         
-        const question9 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations2.usedFalseDocuments.question"][value="false"]').waitHandle();
-        await question9.click();
+        for (const selector of selectorsPage2) {
+            await clickInput(page, selector);
+        }
         
-        const question10 = await page.locator('input[name="eligibilityStandards.citizenshipClaimsAndImmigrationViolations.citizenshipClaimsAndImmigrationViolations2.subjectToFinalOrderForViolationSection274C.question"][value="false"]').waitHandle();
-        await question10.click();
-    
-    
         await nextClick(page);
     
-        const question11 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.memberCommunistOrTotalitarianParty.question"][value="false"]').waitHandle();
-        await question11.click();
+        const selectorsPage3 = [
+            'input[name="eligibilityStandards.affiliations.affiliations1.memberCommunistOrTotalitarianParty.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations1.memberNaziParty.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations1.incitedAssistedPersecution.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations1.actsInvolvingTortureOrGenocide.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations1.killingAnyPerson.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations1.intentionallyInjuredPerson.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations1.engagedInTerroristActivity.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations1.forcedSexualContact.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations1.limitingReligiousBelief.question"][value="false"]',
+        ];
         
-        const question12 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.memberNaziParty.question"][value="false"]').waitHandle();
-        await question12.click();
-        
-        const question13 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.incitedAssistedPersecution.question"][value="false"]').waitHandle();
-        await question13.click();
-        
-        const question14 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.actsInvolvingTortureOrGenocide.question"][value="false"]').waitHandle();
-        await question14.click();
-        
-        const question15 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.killingAnyPerson.question"][value="false"]').waitHandle();
-        await question15.click();
-        
-        const question16 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.intentionallyInjuredPerson.question"][value="false"]').waitHandle();
-        await question16.click();
-        
-        const question17 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.engagedInTerroristActivity.question"][value="false"]').waitHandle();
-        await question17.click();
-        
-        const question18 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.forcedSexualContact.question"][value="false"]').waitHandle();
-        await question18.click();
-        
-        const question19 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations1.limitingReligiousBelief.question"][value="false"]').waitHandle();
-        await question19.click();
+        for (const selector of selectorsPage3) {
+            await clickInput(page, selector);
+        }
 
         await nextClick(page);
 
-        const question20 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations2.memberParamilitaryUnit.question"][value="false"]').waitHandle();
-        await question20.click();
-
-        const question21 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations2.memberPrisonCamp.question"][value="false"]').waitHandle();
-        await question21.click();
-
-        const question22 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations2.useWeapons.question"][value="false"]').waitHandle();
-        await question22.click();
-
-        const question23 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations2.soldWeapons.question"][value="false"]').waitHandle();
-        await question23.click();
-
-        const question24 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations2.receivedParamilitaryTraining.question"][value="false"]').waitHandle();
-        await question24.click();
-
-        const question25 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations2.recruitedMinorToServeInMilitary.question"][value="false"]').waitHandle();
-        await question25.click();
-
-        const question26 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations2.usedMinorInHostilities.question"][value="false"]').waitHandle();
-        await question26.click();
-
-        const question27 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations2.violatedReligiousFreedom.question"][value="false"]').waitHandle();
-        await question27.click();
-
+        const selectorsPage4 = [
+            'input[name="eligibilityStandards.affiliations.affiliations2.memberParamilitaryUnit.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations2.memberPrisonCamp.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations2.useWeapons.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations2.soldWeapons.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations2.receivedParamilitaryTraining.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations2.recruitedMinorToServeInMilitary.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations2.usedMinorInHostilities.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations2.violatedReligiousFreedom.question"][value="false"]',
+        ];
+        
+        for (const selector of selectorsPage4) {
+            await clickInput(page, selector);
+        }
+        
         await nextClick(page);
     
-        const question28 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations3.spouseOrChildTraffickedInControlledSubstance.question"][value="false"]').waitHandle();
-        await question28.click();
+        const selectorsPage5 = [
+            'input[name="eligibilityStandards.affiliations.affiliations3.spouseOrChildTraffickedInControlledSubstance.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations3.spouseOrChildWhoAssistedInTrafficking.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations3.spouseOrChildOfHumanTrafficker.question"][value="false"]',
+            'input[name="eligibilityStandards.affiliations.affiliations3.spouseOrChildOfColluderWithHumanTrafficker.question"][value="false"]',
+        ];
         
-        const question29 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations3.spouseOrChildWhoAssistedInTrafficking.question"][value="false"]').waitHandle();
-        await question29.click();
-        
-        const question30 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations3.spouseOrChildOfHumanTrafficker.question"][value="false"]').waitHandle();
-        await question30.click();
-        
-        const question31 = await page.locator('input[name="eligibilityStandards.affiliations.affiliations3.spouseOrChildOfColluderWithHumanTrafficker.question"][value="false"]').waitHandle();
-        await question31.click();
+        for (const selector of selectorsPage5) {
+            await clickInput(page, selector);
+        }
     
         await nextClick(page);
     
-        const question32 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.felonyConvictedInUS.question"][value="false"]').waitHandle();
-        await question32.click();
+        const selectorsPage6 = [
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.felonyConvictedInUS.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.misdemeanorInUS.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.seriousCrimeCommitted.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.crimeOtherThanPurelyPolitical.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.violationControlledSubstance.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.conspiracyControlledSubstance.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.twoOrMoreCriminalOffenses.question"][value="false"]',
+        ];
         
-        const question33 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.misdemeanorInUS.question"][value="false"]').waitHandle();
-        await question33.click();
-        
-        const question34 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.seriousCrimeCommitted.question"][value="false"]').waitHandle();
-        await question34.click();
-        
-        const question35 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.crimeOtherThanPurelyPolitical.question"][value="false"]').waitHandle();
-        await question35.click();
-        
-        const question36 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.violationControlledSubstance.question"][value="false"]').waitHandle();
-        await question36.click();
-        
-        const question37 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.conspiracyControlledSubstance.question"][value="false"]').waitHandle();
-        await question37.click();
-        
-        const question38 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses1.twoOrMoreCriminalOffenses.question"][value="false"]').waitHandle();
-        await question38.click();
+        for (const selector of selectorsPage6) {
+            await clickInput(page, selector);
+        }
     
         await nextClick(page);
     
-        const question39 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.arrestedForBreakingLaw.question"][value="false"]').waitHandle();
-        await question39.click();
-
-        const question40 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.citedForBreakingLaw.question"][value="false"]').waitHandle();
-        await question40.click();
-
-        const question41 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.convictedOfBreakingLaw.question"][value="false"]').waitHandle();
-        await question41.click();
-
-        const question42 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.receivedPardon.question"][value="false"]').waitHandle();
-        await question42.click();
-
-        const question43 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.assertedImmunityInUS.question"][value="false"]').waitHandle();
-        await question43.click();
-
-        const question44 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.nonPoliticalCrimes.question"][value="false"]').waitHandle();
-        await question44.click();
-
+        const selectorsPage7 = [
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.arrestedForBreakingLaw.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.citedForBreakingLaw.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.convictedOfBreakingLaw.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.receivedPardon.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.assertedImmunityInUS.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses2.nonPoliticalCrimes.question"][value="false"]',
+        ];
+        
+        for (const selector of selectorsPage7) {
+            await clickInput(page, selector);
+        }
     
         await nextClick(page);
     
-        const question45 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.violateLawOfEspionageSabotage.question"][value="false"]').waitHandle();
-        await question45.click();
+        const selectorsPage8 = [
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.violateLawOfEspionageSabotage.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.evadeLawProhibitExportFromUSGoods.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.anyOtherUnlawfulActivityInUS.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.overthrowUSGovernmentByForce.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.seriousAdverseForeignPolicyForUS.question"][value="false"]',
+            'input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.dangerToUS.question"][value="false"]',
+        ];
         
-        const question46 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.evadeLawProhibitExportFromUSGoods.question"][value="false"]').waitHandle();
-        await question46.click();
-        
-        const question47 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.anyOtherUnlawfulActivityInUS.question"][value="false"]').waitHandle();
-        await question47.click();
-        
-        const question48 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.overthrowUSGovernmentByForce.question"][value="false"]').waitHandle();
-        await question48.click();
-        
-        const question49 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.seriousAdverseForeignPolicyForUS.question"][value="false"]').waitHandle();
-        await question49.click();
-        
-        const question50 = await page.locator('input[name="eligibilityStandards.crimesAndOffenses.crimesAndOffenses3.dangerToUS.question"][value="false"]').waitHandle();
-        await question50.click();
-        
+        for (const selector of selectorsPage8) {
+            await clickInput(page, selector);
+        }
     
         await nextClick(page);
     
-        const question51 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter1.traffickedInControlledSubstance.question"][value="false"]').waitHandle();
-        await question51.click();
-
-        const question52 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter1.assistedAbettedConspiredInTrafficking.question"][value="false"]').waitHandle();
-        await question52.click();
-
-        const question53 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter1.previousFiveYearFinancialBenefitFromUnlawfulActivity.question"][value="false"]').waitHandle();
-        await question53.click();
-
-        const question54 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter1.engagedInProstitution.question"][value="false"]').waitHandle();
-        await question54.click();
-
-        const question55 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter1.procuredProstitute.question"][value="false"]').waitHandle();
-        await question55.click();
-
-        const question56 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter1.receivedProceedsFromProstitution.question"][value="false"]').waitHandle();
-        await question56.click();
-
-        const question57 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter1.involvedInCommercialVice.question"][value="false"]').waitHandle();
-        await question57.click();
-
-        const question58 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter1.drugAbuser.question"][value="false"]').waitHandle();
-        await question58.click();
-
-    
+        const selectorsPage9 = [
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter1.traffickedInControlledSubstance.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter1.assistedAbettedConspiredInTrafficking.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter1.previousFiveYearFinancialBenefitFromUnlawfulActivity.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter1.engagedInProstitution.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter1.procuredProstitute.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter1.receivedProceedsFromProstitution.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter1.involvedInCommercialVice.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter1.drugAbuser.question"][value="false"]',
+        ];
+        
+        for (const selector of selectorsPage9) {
+            await clickInput(page, selector);
+        }
+        
         await nextClick(page);
     
-        const question59 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter2.practicePolygamy.question"][value="false"]').waitHandle();
-        await question59.click();
-
-        const question60 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter2.withheldCustodyOfChildHavingLawfulClaimToUS.question"][value="false"]').waitHandle();
-        await question60.click();
-
-        const question61 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter2.contributedToHumanTrafficking.question"][value="false"]').waitHandle();
-        await question61.click();
-
-        const question62 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter2.colludedInHumanTrafficking.question"][value="false"]').waitHandle();
-        await question62.click();
-
-        const question63 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter2.benefitedFromHumanTrafficking.question"][value="false"]').waitHandle();
-        await question63.click();
-
-        const question64 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter2.moneyLaunderer.question"][value="false"]').waitHandle();
-        await question64.click();
-
-        const question65 = await page.locator('input[name="eligibilityStandards.moralCharacter.moralCharacter2.colludedInMoneyLaundering.question"][value="false"]').waitHandle();
-        await question65.click();
-    
+        const selectorsPage10 = [
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter2.practicePolygamy.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter2.withheldCustodyOfChildHavingLawfulClaimToUS.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter2.contributedToHumanTrafficking.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter2.colludedInHumanTrafficking.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter2.benefitedFromHumanTrafficking.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter2.moneyLaunderer.question"][value="false"]',
+            'input[name="eligibilityStandards.moralCharacter.moralCharacter2.colludedInMoneyLaundering.question"][value="false"]',
+        ];
+        
+        for (const selector of selectorsPage10) {
+            await clickInput(page, selector);
+        }
+        
         await nextClick(page);
     
     }catch(e){
