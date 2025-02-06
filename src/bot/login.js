@@ -7,6 +7,8 @@ const StartLogin = async (formToStart, resultId) => {
     });
     const page = await browser.newPage();
 
+    await page.setGeolocation({ latitude: 37.7749, longitude: -122.4194 });
+
     await page.goto('https://myaccount.uscis.gov/sign-in', { waitUntil: 'networkidle2' });
 
     const fillInput = async (selector, value) => {
@@ -149,7 +151,7 @@ const StartLogin = async (formToStart, resultId) => {
     await fillInput('#secure-verification-code', codeUser);
 
     await page.click('[aria-label="Submit"]');
-
+    console.log(formToStart)
     formToStart(page, resultId);
 };
 

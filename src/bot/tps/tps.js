@@ -8,6 +8,12 @@ const nextClick = async (page) => {
     await buttonNext.click()
 }
 
+const tableNextButton = async (page) => {
+    await sleep(3000)
+    const buttonNext = await page.locator('[id="table-next-button"]').waitHandle();
+    await buttonNext.click()
+}
+
 const clickInput = async (page, selector) =>{
     try {
         await sleep(1000)
@@ -96,7 +102,6 @@ const startTPS = async (page, resultId) => {
         await page.waitForSelector('ul[role="listbox"]'); 
 
         let optionText = inputs.find(input => input.Nombre === '¿En que pais naciste').Valor;
-        //await selectDropdownOption(page, 'li[role="option"]', optionText, 'input[name="gettingStarted.typeOfApplication.nameOfTPSCountry"]')
 
         optionText = optionText.charAt(0).toUpperCase() + optionText.slice(1);
         optionText = optionText.replace(/ /g, '');//remove spaces
@@ -641,4 +646,11 @@ const startTPS = async (page, resultId) => {
     }
 }
 
-module.exports = startTPS;
+module.exports = {
+    startTPS,
+    sleep,
+    nextClick,
+    clickInput,
+    fillInput,
+    tableNextButton
+};

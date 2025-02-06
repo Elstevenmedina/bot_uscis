@@ -5,7 +5,8 @@ const clienteDB = require('../models/clients/clientes')
 const resultadosDB = require("../models/resultados");
 const formulariosDB = require("../models/formularios");
 const StartLogin  = require("../bot/login");
-const startTPS = require("../bot/tps/tps");
+const {startTPS} = require("../bot/tps/tps");
+const startAsylum = require("../bot/asylum/asylum");
 
 router.get("/home", isAuthenticated, async (req, res) => {
     res.render("admin/inicio");
@@ -135,7 +136,7 @@ router.get("/resultados-franquiciado",isAuthenticated,async (req, res, next) => 
                 $and: [
                     { Visualizacion: true },
                     { _idFranquicia: franquiciaId },
-                    {Titulo:"TPS"},
+                    { $or: [{ Titulo: "TPS" }, { Titulo: "Solicitud de asilo" }] },
                     { Estado: { $ne: "Procesado" } },
                 ],
             })
@@ -173,9 +174,15 @@ router.get("/resultados-franquiciado-procesados",isAuthenticated,async (req, res
 
 router.get('/autollenar-formulario/:id', isAuthenticated, async (req, res, next) =>{
     const resultado = await resultadosDB.findById(req.params.id).lean()
-    await StartLogin(startTPS, resultado._id).catch((error) => {
-        console.error('Error:', error);
-    });
+    if(resultado.Titulo === "TPS"){
+      await StartLogin(startTPS, resultado._id).catch((error) => {
+          console.error('Error:', error);
+      });
+    }else{
+      await StartLogin(startAsylum, resultado._id).catch((error) => {
+          console.error('Error:', error);
+      });
+    }
 })
 
 router.get("/ver-informacion-resultados-franquiciado/:id",isAuthenticated,async (req, res, next) => {
